@@ -33,7 +33,6 @@ class ChannelAPI:
     - delete: delete a channel
     """
     class _CRUD(Resource):
-        @token_required()
         def post(self):
             """
             Create a new channel.
@@ -58,7 +57,6 @@ class ChannelAPI:
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
             return jsonify(channel.read())
 
-        @token_required()
         def get(self):
             """
             Retrieve a single channel by ID.
