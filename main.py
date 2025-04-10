@@ -185,7 +185,7 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
-        data['dna'] = [post.read() for post in LabSim.query.all()]
+        data['name'] = [post.read() for post in LabSim.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -200,7 +200,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'dna']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'name']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -213,7 +213,7 @@ def restore_data(data):
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
-        _ = LabSim.restore(data['dna'])
+        _ = LabSim.restore(data['name'])
     print("Data restored to the new database.")
 
 # Define a command to backup data

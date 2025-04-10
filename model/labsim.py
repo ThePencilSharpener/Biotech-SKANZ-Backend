@@ -7,14 +7,14 @@ class LabSim (db.Model):
    
     __tablename__ = 'labsim'
     id = db.Column(db.Integer, primary_key=True)
-    dna = db.Column(db.String(255), nullable=False)
-    age = db.Column(db.String(255), nullable=False)
-    def __init__(self, dna, age, ):
-        self.dna = dna
-        self.age = age
+    name = db.Column(db.String(255), nullable=False)
+    points = db.Column(db.String(255), nullable=False)
+    def __init__(self, name, points, ):
+        self.name = name
+        self.points = points
     def __repr__(self):
        
-        return f"<LabSim(id={self.id}, dna='{self.dna}', age='{self.age})>"
+        return f"<LabSim(id={self.id}, name='{self.name}', points='{self.points})>"
     def create(self):
        
         try:
@@ -27,8 +27,8 @@ class LabSim (db.Model):
        
         return {
             "id": self.id,
-            "dna": self.dna,
-            "age": self.age,
+            "name": self.name,
+            "points": self.points,
         }
     def update(self):
         try:
@@ -59,8 +59,8 @@ class LabSim (db.Model):
             restored_facts = {}
             for fact_data in data:
                 fact = LabSim(
-                    dna=fact_data['dna'],
-                    age=fact_data['age']
+                    name=fact_data['name'],
+                    points=fact_data['points']
                 )
                 fact.create()
                 restored_facts[fact_data['id']] = fact
@@ -72,10 +72,10 @@ def initLabSim():
         db.create_all()  # Create the database and tables
         # Sample test data
         quizzes = [
-            LabSim(dna="T", age="1"),
-            LabSim(dna="G", age="2"),
-            LabSim(dna="C", age="3"),
-            LabSim(dna="A", age="4"),
+            LabSim(name="John", points="1"),
+            LabSim(name="Jack", points="2"),
+            LabSim(name="Jake", points="3"),
+            LabSim(name="Jane", points="4"),
         ]
         for quiz in quizzes:
             try:

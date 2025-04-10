@@ -14,7 +14,7 @@ class LabSimAPI:
             # Obtain the request data sent by the RESTful client API
             data = request.get_json()
             # Create a new post object using the data from the request
-            post = LabSim(age=data['age'], dna=data['dna'])
+            post = LabSim(points=data['points'], name=data['name'])
             # Save the post object using the Object Relational Mapper (ORM) method defined in the model
             post.create()
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
@@ -22,19 +22,19 @@ class LabSimAPI:
 
         def put(self):
             data = request.get_json()
-            if not data or not data.get("age") or not data.get("dna"):
-                return jsonify({"message": "DNA and age are required to update"}), 400
-            old = LabSim.query.filter_by(dna=data["dna"], age=data["age"]).first()
+            if not data or not data.get("points") or not data.get("name"):
+                return jsonify({"message": "name and points are required to update"}), 400
+            old = LabSim.query.filter_by(name=data["name"], points=data["points"]).first()
             if not old:
-                return jsonify({"message": "DNA and age not found"}), 404
+                return jsonify({"message": "name and points not found"}), 404
 
             # Update the object's attributes
-            old.dna = data["new_dna"]
-            old.age = data["new_age"]
+            old.name = data["new_name"]
+            old.points = data["new_points"]
             if old.update():
                 #return "hello"
-                return jsonify({"message": "DNA and age updated", "old DNA": data["dna"], "new_DNA": old.dna, "old_age": data["age"], "new_age": old.age})
-           # coolfact.update({"coolfacts": data["coolfacts"], "age": data["age"]})
+                return jsonify({"message": "name and points updated", "old name": data["name"], "new_name": old.name, "old_points": data["points"], "new_points": old.points})
+           # coolfact.update({"coolfacts": data["coolfacts"], "points": data["points"]})
 
         def get(self):
             try:
