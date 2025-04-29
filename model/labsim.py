@@ -1,6 +1,7 @@
 from sqlite3 import IntegrityError
 from sqlalchemy.exc import SQLAlchemyError
 from __init__ import app, db
+from datetime import datetime, timedelta
 import logging
 
 class LabSim (db.Model):
@@ -15,6 +16,11 @@ class LabSim (db.Model):
     def __repr__(self):
        
         return f"<LabSim(id={self.id}, name='{self.name}', points='{self.points})>"
+    def check_time(self, timestamp):
+        current_time = datetime.utcnow()  # Get the current UTC time
+        time_difference = current_time - timestamp  # Calculate the time difference
+        return time_difference > timedelta(seconds=30)  # Return True if > 30 seconds, else False
+            
     def create(self):
        
         try:

@@ -58,7 +58,7 @@ class LabSimAPI:
             # Return response
             return jsonify({"message": "Post deleted"})
 
-    api_labsim.add_resource(_CRUD, '/labsim')
+    api_labsim.add_resource(_CRUD, '/kush-yk')
 
 if __name__ == '__main__':
     app.run(debug=True)

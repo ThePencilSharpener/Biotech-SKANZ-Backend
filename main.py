@@ -27,6 +27,7 @@ from api.messages_api import messages_api # Adi added this, messages for his web
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.labsimapi import labsim_api
+from api.science_question_api import science_api  # Import the science question API
 
 from api.vote import vote_api
 # database Initialization functions
@@ -39,10 +40,12 @@ from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
 from model.labsim import LabSim, initLabSim
+from science_question import ScienceQuestionModel  # Import the DNA model and initialization function
 # server only Views
 
 # register URIs for api endpoints
 app.register_blueprint(messages_api) # Adi added this, messages for his website
+app.register_blueprint(science_api)  # Register the DNA API blueprint
 app.register_blueprint(user_api)
 app.register_blueprint(pfp_api) 
 app.register_blueprint(post_api)
@@ -164,7 +167,7 @@ def generate_data():
     initPosts()
     initNestPosts()
     initVotes()
-    
+
 # Backup the old database
 def backup_database(db_uri, backup_uri):
     """Backup the current database."""
