@@ -1,29 +1,29 @@
 # imports from flask
 import json
 import os
+import csv  # Add this import for handling CSV files
 from urllib.parse import urljoin, urlparse
-from flask import abort, redirect, render_template, request, send_from_directory, url_for, jsonify  # import render_template from "public" flask libraries
+from flask import abort, redirect, render_template, request, send_from_directory, url_for, jsonify
 from flask_login import current_user, login_user, logout_user
 from flask.cli import AppGroup
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, LoginManager, UserMixin
 from flask import current_app
 from werkzeug.security import generate_password_hash
 import shutil
-
-
+from flask import jsonify, request
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
 # API endpoints
-from api.user import user_api 
+from api.user import user_api
 from api.pfp import pfp_api
-from api.nestImg import nestImg_api # Justin added this, custom format for his website
+from api.nestImg import nestImg_api
 from api.post import post_api
 from api.channel import channel_api
 from api.group import group_api
 from api.section import section_api
-from api.nestPost import nestPost_api # Justin added this, custom format for his website
-from api.messages_api import messages_api # Adi added this, messages for his website
+from api.nestPost import nestPost_api
+from api.messages_api import messages_api
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.labsimapi import labsim_api
@@ -36,13 +36,12 @@ from model.section import Section, initSections
 from model.group import Group, initGroups
 from model.channel import Channel, initChannels
 from model.post import Post, initPosts
-from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
+from model.nestPost import NestPost, initNestPosts
 from model.vote import Vote, initVotes
 from model.labsim import LabSim, initLabSim
-# server only Views
 
-# register URIs for api endpoints
-app.register_blueprint(messages_api) # Adi added this, messages for his website
+# Register URIs for API endpoints
+app.register_blueprint(messages_api)
 app.register_blueprint(user_api)
 app.register_blueprint(pfp_api) 
 app.register_blueprint(post_api)
@@ -51,11 +50,11 @@ app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
 app.register_blueprint(car_chat_api)
-# Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
+
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
@@ -101,7 +100,6 @@ def logout():
 
 @app.errorhandler(404)  # catch for URL not found
 def page_not_found(e):
-    # note that we set the 404 status explicitly
     return render_template('404.html'), 404
 
 @app.route('/')  # connects default URL to index() function
@@ -121,11 +119,10 @@ def u2table():
     users = User.query.all()
     return render_template("u2table.html", user_data=users)
 
-# Helper function to extract uploads for a user (ie PFP image)
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
- 
+
 @app.route('/users/delete/<int:user_id>', methods=['DELETE'])
 @login_required
 def delete_user(user_id):
@@ -145,19 +142,73 @@ def reset_password(user_id):
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Set the new password
     if user.update({"password": app.config['DEFAULT_PASSWORD']}):
         return jsonify({'message': 'Password reset successfully'}), 200
     return jsonify({'error': 'Password reset failed'}), 500
 
+# Path to the CSV file
+csv_file_path = os.path.join(os.path.dirname(__file__), 'test.csv')
+
+# Load the CSV data into memory
+def load_csv_data(file_path):
+    data = []
+    try:
+        with open(file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                # Convert difficulty_rating to an integer
+                row['difficulty_rating'] = int(row['difficulty_rating'])
+                data.append(row)
+    except Exception as e:
+        print(f"Error loading CSV file: {e}")
+    return data
+
+# Load the data at startup
+questions_data = load_csv_data(csv_file_path)
+
+@app.route('/api/questions', methods=['GET'])
+def get_questions():
+    try:
+        # Optional: Get the difficulty from query parameters
+        difficulty = request.args.get('difficulty', type=int)
+
+        # Filter questions by difficulty if provided
+        if difficulty is not None:
+            filtered_questions = [
+                {
+                    "scenario": row["question"],
+                    "options": [row["distractor3"], row["distractor1"], row["distractor2"], row["correct_answer"]],
+                    "answer": row["correct_answer"],
+                    "difficulty": row["difficulty_rating"]
+                }
+                for row in questions_data if row["difficulty_rating"] == difficulty
+            ]
+            if not filtered_questions:
+                return jsonify({'error': 'No questions found for the given difficulty'}), 404
+            return jsonify(filtered_questions), 200
+
+        # If no difficulty parameter is provided, return all questions
+        all_questions = [
+            {
+                "scenario": row["question"],
+                "options": [row["distractor3"], row["distractor1"], row["distractor2"], row["correct_answer"]],
+                "answer": row["correct_answer"],
+                "difficulty": row["difficulty_rating"]
+            }
+            for row in questions_data
+        ]
+        return jsonify(all_questions), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # Create an AppGroup for custom commands
 custom_cli = AppGroup('custom', help='Custom commands')
 
-# Define a command to run the data generation functions
 @custom_cli.command('generate_data')
 def generate_data():
-    initUsers()
-    initLabSim()
+    initUsers()  # Create users first
+    initLabSim()  # Then create LabSim entries
     initSections()
     initGroups()
     initChannels()
@@ -165,9 +216,7 @@ def generate_data():
     initNestPosts()
     initVotes()
     
-# Backup the old database
 def backup_database(db_uri, backup_uri):
-    """Backup the current database."""
     if backup_uri:
         db_path = db_uri.replace('sqlite:///', 'instance/')
         backup_path = backup_uri.replace('sqlite:///', 'instance/')
@@ -176,7 +225,6 @@ def backup_database(db_uri, backup_uri):
     else:
         print("Backup not supported for production database.")
 
-# Extract data from the existing database
 def extract_data():
     data = {}
     with app.app_context():
@@ -188,7 +236,6 @@ def extract_data():
         data['name'] = [post.read() for post in LabSim.query.all()]
     return data
 
-# Save extracted data to JSON files
 def save_data_to_json(data, directory='backup'):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -197,7 +244,6 @@ def save_data_to_json(data, directory='backup'):
             json.dump(records, f)
     print(f"Data backed up to {directory} directory.")
 
-# Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
     for table in ['users', 'sections', 'groups', 'channels', 'posts', 'name']:
@@ -205,7 +251,6 @@ def load_data_from_json(directory='backup'):
             data[table] = json.load(f)
     return data
 
-# Restore data to the new database
 def restore_data(data):
     with app.app_context():
         users = User.restore(data['users'])
@@ -216,23 +261,18 @@ def restore_data(data):
         _ = LabSim.restore(data['name'])
     print("Data restored to the new database.")
 
-# Define a command to backup data
 @custom_cli.command('backup_data')
 def backup_data():
     data = extract_data()
     save_data_to_json(data)
     backup_database(app.config['SQLALCHEMY_DATABASE_URI'], app.config['SQLALCHEMY_BACKUP_URI'])
 
-# Define a command to restore data
 @custom_cli.command('restore_data')
 def restore_data_command():
     data = load_data_from_json()
     restore_data(data)
     
-# Register the custom command group with the Flask application
 app.cli.add_command(custom_cli)
         
-# this runs the flask application on the development server
 if __name__ == "__main__":
-    # change name for testing
     app.run(debug=True, host="0.0.0.0", port="8887")
