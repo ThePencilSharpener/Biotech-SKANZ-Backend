@@ -7,6 +7,15 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 import numpy as np
 
+import joblib
+import os
+
+# Paths to saved model files
+MODEL_PATH = 'models_weights/science_model.joblib'
+VECTORIZER_PATH = 'models_weights/science_vectorizer.joblib'
+DTREE_PATH = 'models_weights/science_decision_tree.joblib'
+
+
 class ScienceQuestionModel:
     """A class to represent the Science Question Classifier Model."""
 
@@ -47,8 +56,23 @@ class ScienceQuestionModel:
         """Gets and builds the singleton instance of the ScienceQuestionModel."""
         if cls._instance is None:
             cls._instance = cls()
-            cls._instance._clean()
-            cls._instance._train()
+
+            # Load if all saved model files exist
+            if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH) and os.path.exists(DTREE_PATH):
+                cls._instance.model = joblib.load(MODEL_PATH)
+                cls._instance.vectorizer = joblib.load(VECTORIZER_PATH)
+                cls._instance.dt = joblib.load(DTREE_PATH)
+                cls._instance.features = cls._instance.vectorizer.get_feature_names_out()
+            else:
+                # First-time run: clean, train, save
+                cls._instance._clean()
+                cls._instance._train()
+
+                # Save trained objects to disk
+                joblib.dump(cls._instance.model, MODEL_PATH)
+                joblib.dump(cls._instance.vectorizer, VECTORIZER_PATH)
+                joblib.dump(cls._instance.dt, DTREE_PATH)
+
         return cls._instance
 
     def predict(self, question):

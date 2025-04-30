@@ -1,37 +1,28 @@
 ## Python Science Question Sample API endpoint
+# Python Science Question Sample API endpoint
 from flask import Blueprint, request, jsonify
-from flask_restful import Api, Resource  # used for REST API building
-from science_question import ScienceQuestionModel
+from flask_restful import Api, Resource
+from science_question import ScienceQuestionModel  # Your updated model with saved weights
 
-# Import the ScienceQuestionModel class
-# from model.science_question import ScienceQuestionModel
-
-science_api = Blueprint('science_api', __name__,
-                        url_prefix='/api')
-
+science_api = Blueprint('science_api', __name__, url_prefix='/api')
 api = Api(science_api)
 
 class ScienceAPI:
     class _Predict(Resource):
         def post(self):
-            """ Semantics: POST request to predict the topic of a science question.
-
-            Sending a question to the server to get topic probabilities fits POST semantics.
-            - POST body can hold larger text data easily.
-            - HTTPS encrypts the body.
-            - JSON makes communication simple and readable.
             """
-            # Get the question data from the request
+            POST request to predict the topic of a science question.
+            Expects a JSON body with a 'question' field.
+            """
             data = request.get_json()
             question = data.get('question', '')
 
-            # Get the singleton instance of the ScienceQuestionModel
-            model = ScienceQuestionModel.get_instance()
+            if not question:
+                return jsonify({"error": "Missing or empty 'question' field"}), 400
 
-            # Predict topic probabilities for the question
+            model = ScienceQuestionModel.get_instance()
             response = model.predict(question)
-            
-            # Return the response as JSON
+
             return jsonify(response)
 
     api.add_resource(_Predict, '/predict')

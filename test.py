@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # Load the parquet file
-df = pd.read_parquet('train_correct.parquet')
+df = pd.read_parquet('train.parquet')
 
 # Keep only the 'question' and 'topic' columns
 df = df[['question', 'topic']]
