@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # Load the parquet file
-df = pd.read_parquet('train(correct).parquet')
+df = pd.read_parquet('train_correct.parquet')
 
 # Keep only the 'question' and 'topic' columns
 df = df[['question', 'topic']]
@@ -19,5 +19,4 @@ print(df.head(8))
 
 # If you want to save the cleaned file back to parquet:
 df.to_parquet('traincleaned_file.parquet', index=False)
-print(self.df['topic'].value_counts())
 
