@@ -27,6 +27,7 @@ from api.messages_api import messages_api
 from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.labsimapi import labsim_api
+from api.science_question_api import science_api
 
 from api.vote import vote_api
 # database Initialization functions
@@ -54,6 +55,7 @@ app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
+app.register_blueprint(science_api)
 
 
 # Tell Flask-Login the view function name of your login route
