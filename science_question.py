@@ -21,13 +21,12 @@ class ScienceQuestionModel:
 
     _instance = None
 
-    def __init__(self):
+    def init(self):
         self.model = None
         self.dt = None
         self.vectorizer = TfidfVectorizer()
         self.features = None  # Will hold the feature names after vectorization
-        self.target = 'topic'
-        self.df = pd.read_parquet('traincleaned_file.parquet')  # <-- Load your cleaned parquet file
+        self.df = None  # Delay loading until needed
 
     def _clean(self):
         """Prepare data for training."""
