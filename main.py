@@ -235,7 +235,7 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
-        data['name'] = [post.read() for post in LabSim.query.all()]
+        data['labsim'] = [post.read() for post in LabSim.query.all()]
     return data
 
 def save_data_to_json(data, directory='backup'):
@@ -260,7 +260,7 @@ def restore_data(data):
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
-        _ = LabSim.restore(data['name'])
+        _ = LabSim.restore(data['labsim'])
     print("Data restored to the new database.")
 
 @custom_cli.command('backup_data')

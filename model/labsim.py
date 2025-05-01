@@ -1,86 +1,122 @@
+# post.py
 from sqlite3 import IntegrityError
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import Text
 from __init__ import app, db
-import logging
+from model.user import User
 
-class LabSim (db.Model):
-   
+class LabSim(db.Model):
+    """
+    Labsim Model
+    
+    The LabSim class represents an individual lab simulation attempt by a user.
+    
+    Attributes:
+        id (db.Column): The primary key, an integer representing the unique identifier for the lab attempt.
+        _name1 (db.Column): An integer representing the user who created the lab attempt (foreign key to users.id).
+        _points (db.Column): A string representing the points scored in the lab attempt.
+    """
     __tablename__ = 'labsim'
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    points = db.Column(db.String(255), nullable=False)
-    def __init__(self, name, points, ):
-        self.name = name
-        self.points = points
+    _name1 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    _points = db.Column(db.String(255), nullable=False)
+
+    def __init__(self, name1, points):
+        """
+        Constructor, 1st step in object creation.
+        """
+        self._name1 = name1
+        self._points = points
+
     def __repr__(self):
-       
-        return f"<LabSim(id={self.id}, name='{self.name}', points='{self.points})>"
-    def create(self):
-       
+        """
+        The __repr__ method is a special method used to represent the object in a string format.
+        Called by the repr(post) built-in function, where post is an instance of the LabSim class.
+        
+        Returns:
+            str: A text representation of how to create the object.
+        """
+        return f"LabSim(id={self.id}, name1={self._name1}, points={self._points})"
+
+    def read(self):
+        """
+        The read method retrieves the object data from the object's attributes and returns it as a dictionary.
+        
+        Uses:
+            The User.query method to retrieve the user object.
+        
+        Returns:
+            dict: A dictionary containing the lab simulation data, including the user's name.
+        """
+        user = User.query.get(self._name1)
+        data = {
+            "id": self.id,
+            "user_name": user.name if user else None,  # Retrieve the user's name
+            "points": self._points
+        }
+        return data
+    
+    def update(self):
+        """
+        The update method commits the transaction to the database.
+        
+        Uses:
+            The db ORM method to commit the transaction.
+        
+        Raises:
+            Exception: An error occurred when updating the object in the database.
+        """
         try:
-            db.session.add(self)
             db.session.commit()
-        except SQLAlchemyError as e:
+        except Exception as e:
             db.session.rollback()
             raise e
-    def read(self):
-       
-        return {
-            "id": self.id,
-            "name": self.name,
-            "points": self.points,
-        }
-    def update(self):
-        try:
-            db.session.add(self)
-            db.session.commit()
-            return True
-        except IntegrityError as e:
-            logging.error(f"Error creating hobby: {e}")
-            db.session.rollback()
-            return False
+    
     def delete(self):
-       
+        """
+        The delete method removes the object from the database and commits the transaction.
+        
+        Uses:
+            The db ORM methods to delete and commit the transaction.
+        
+        Raises:
+            Exception: An error occurred when deleting the object from the database.
+        """    
         try:
             db.session.delete(self)
             db.session.commit()
-            return True
-        except IntegrityError as e:
-            logging.error(f"Error deleting hobby: {e}")
+        except Exception as e:
             db.session.rollback()
-            return False
-   
-    @staticmethod
-    def restore(data):
-        with app.app_context():
-            db.session.query(LabSim).delete()
-            db.session.commit()
+            raise e
 
-            restored_facts = {}
-            for fact_data in data:
-                fact = LabSim(
-                    name=fact_data['name'],
-                    points=fact_data['points']
-                )
-                fact.create()
-                restored_facts[fact_data['id']] = fact
-
-            return restored_facts
 def initLabSim():
-   
+    """
+    The initPosts function creates the Post table and adds tester data to the table.
+    
+    Uses:
+        The db ORM methods to create the table.
+    
+    Instantiates:
+        Post objects with tester data.
+    
+    Raises:
+        IntegrityError: An error occurred when adding the tester data to the table.
+    """        
     with app.app_context():
-        db.create_all()  # Create the database and tables
-        # Sample test data
-        quizzes = [
-            LabSim(name="John", points="1"),
-            LabSim(name="Jack", points="2"),
-            LabSim(name="Jake", points="3"),
-            LabSim(name="Jane", points="4"),
-        ]
-        for quiz in quizzes:
+        """Create database and tables"""
+        db.create_all()
+        """Tester data for table"""
+        
+        p1 = LabSim(name1=1, points="1")  
+        p2 = LabSim(name1=2, points="2")
+        p3 = LabSim(name1=3, points="3")
+        p4 = LabSim(name1=1, points="4")
+        
+        for post in [p1, p2, p3, p4]:
             try:
-                quiz.create()
-                print(f"Created quiz: {repr(quiz)}")
-            except IntegrityError as e:
-                db.session.rollback()
-                print(f"Record already exists or error occurred: {str(e)}")
+                post.create()
+                print(f"Record created: {repr(post)}")
+            except IntegrityError:
+                '''fails with bad or duplicate data'''
+                db.session.remove()
+                print(f"Records exist, duplicate email, or error: {post.uid}")
