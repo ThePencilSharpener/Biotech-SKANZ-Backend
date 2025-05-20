@@ -16,10 +16,6 @@ scikit-learn
 pymysql
 psycopg2-binary
 python_dotenv
-<<<<<<< HEAD
-boto3
-=======
 boto3
 pyarrow
 fastparquet
->>>>>>> db7acbcc72cca8c320880effea45b6fbf85ccfac
