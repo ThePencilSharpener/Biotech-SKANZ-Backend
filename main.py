@@ -23,39 +23,25 @@ from api.channel import channel_api
 from api.group import group_api
 from api.section import section_api
 from api.nestPost import nestPost_api
-from api.messages_api import messages_api
-from api.carphoto import car_api
-from api.carChat import car_chat_api
-from api.labsimapi import labsim_api
-from api.science_question_api import science_api
 
-from api.vote import vote_api
+
 # database Initialization functions
-from model.carChat import CarChat
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
 from model.channel import Channel, initChannels
 from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts
-from model.vote import Vote, initVotes
-from model.labsim import LabSim, initLabSim
 
 # Register URIs for API endpoints
-app.register_blueprint(messages_api)
 app.register_blueprint(user_api)
 app.register_blueprint(pfp_api) 
 app.register_blueprint(post_api)
-app.register_blueprint(labsim_api)
 app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
-app.register_blueprint(car_chat_api)
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
-app.register_blueprint(vote_api)
-app.register_blueprint(car_api)
-app.register_blueprint(science_api)
 
 
 # Tell Flask-Login the view function name of your login route
@@ -209,14 +195,12 @@ custom_cli = AppGroup('custom', help='Custom commands')
 
 @custom_cli.command('generate_data')
 def generate_data():
-    initUsers()  # Create users first
-    initLabSim()  # Then create LabSim entries
+    initUsers()  # Create users firs  # Then create LabSim entries
     initSections()
     initGroups()
     initChannels()
     initPosts()
     initNestPosts()
-    initVotes()
     
 def backup_database(db_uri, backup_uri):
     if backup_uri:
@@ -235,7 +219,6 @@ def extract_data():
         data['groups'] = [group.read() for group in Group.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
-        data['labsim'] = [post.read() for post in LabSim.query.all()]
     return data
 
 def save_data_to_json(data, directory='backup'):
@@ -260,7 +243,6 @@ def restore_data(data):
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
-        _ = LabSim.restore(data['labsim'])
     print("Data restored to the new database.")
 
 @custom_cli.command('backup_data')
